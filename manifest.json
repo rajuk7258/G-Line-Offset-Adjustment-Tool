@@ -1,0 +1,9 @@
+{
+  "name": "G-Line Offset Adjustment Tool",
+  "short_name": "GLineAdjust",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4a90e2",
+  "icons": []
+}

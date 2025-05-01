@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>G-Line Offset Adjustment Tool</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #c9d6ff, #e2e2e2);
+    }
+    .container {
+      width: 90%;
+
+      max-width: 700px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    h2, h3 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    input[type="number"] {
+      box-sizing: border-box;
+
+      padding: 10px;
+      width: 100%;
+      max-width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .offset-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #357ab7;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    td.corrected {
+      background-color: #fff9c4;
+      font-weight: bold;
+    }
+    #results p {
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    @media (max-width: 600px) {
+      .offset-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>G-Line Offset Adjustment Tool</h2>
+    <label for="actualLength">Actual G-line Length (m):</label>
+    <input type="number" id="actualLength" step="0.01">
+    <label for="measuredLength">Measured G-line Length (m):</label>
+    <input type="number" id="measuredLength" step="0.01">
+    <h3>Offsets on Measured G-line:</h3>
+    <div id="offsets">
+      <div class="offset-group">
+        <label>Offset 1:</label>
+        <input type="number" step="0.01" class="offsetInput">
+      </div>
+    </div>
+    <button onclick="addOffset()">+ Add Offset</button>
+    <button onclick="calculate()">Calculate</button>
+    <div id="results"></div>
+  </div>
+  <script>
+    let offsetCount = 1;
+    function addOffset() {
+      offsetCount++;
+      const container = document.getElementById("offsets");
+      const div = document.createElement("div");
+      div.className = "offset-group";
+      div.innerHTML = `<label>Offset ${offsetCount}:</label><input type="number" step="0.01" class="offsetInput">`;
+      container.appendChild(div);
+    }
+    function calculate() {
+      const actual = parseFloat(document.getElementById("actualLength").value);
+      const measured = parseFloat(document.getElementById("measuredLength").value);
+      const inputs = document.querySelectorAll(".offsetInput");
+      const offsets = [];
+      inputs.forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val)) offsets.push(val);
+      });
+      if (isNaN(actual) || isNaN(measured) || offsets.length === 0) {
+        alert("Please enter valid values.");
+        return;
+      }
+      const totalCorrection = actual - measured;
+      const scaleFactor = actual / measured;
+      let resultHTML = `
+        <h3>Results</h3>
+        <p><strong>Total Correction:</strong> ${totalCorrection.toFixed(3)} m</p>
+        <p><strong>Scaling Factor:</strong> ${scaleFactor.toFixed(5)}</p>
+        <table>
+          <tr><th>Measured Distance (m)</th><th>Corrected Distance (m)</th><th>Correction</th></tr>
+      `;
+      offsets.forEach(d => {
+        const corrected = d * scaleFactor;
+        const corr = corrected - d;
+        let correctionText = '';
+        if (Math.abs(corr) < 0.0001) {
+          correctionText = 'No correction';
+        } else {
+          correctionText = corr < 0 ? `Subtract ${Math.abs(corr).toFixed(3)} m` : `Add ${corr.toFixed(3)} m`;
+        }
+        resultHTML += `
+          <tr>
+            <td>${d.toFixed(2)}</td>
+            <td class="corrected">${corrected.toFixed(2)}</td>
+            <td>${correctionText}</td>
+          </tr>
+        `;
+      });
+      resultHTML += `</table>`;
+      document.getElementById("results").innerHTML = resultHTML;
+    }
+  </script>
+</body>
+</html>
