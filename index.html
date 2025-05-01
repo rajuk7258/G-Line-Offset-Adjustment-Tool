@@ -152,7 +152,7 @@
         const corr = corrected - d;
         let correctionText = '';
         if (Math.abs(corr) < 0.0001) {
-          correctionText = 'No correction';
+          correctionText = 'No correction needed';
         } else {
           correctionText = corr < 0 ? `Subtract ${Math.abs(corr).toFixed(3)} m` : `Add ${corr.toFixed(3)} m`;
         }
